@@ -17,12 +17,12 @@ class Program
 
     static async Task Main(string[] args)
     {
-        // ✅ Correct way to get token from environment variable
-        string token = Environment.GetEnvironmentVariable("TOKEN")!;
+        // ✅ Read token from config.json
+        string token = LoadTokenFromConfig();
 
         if (string.IsNullOrEmpty(token))
         {
-            Console.WriteLine("❌ Error: Token not found in environment variables!");
+            Console.WriteLine("❌ Error: Token not found in config.json!");
             return;
         }
 
@@ -34,6 +34,13 @@ class Program
         await _client.StartAsync();
 
         await Task.Delay(-1);
+    }
+
+    private static string LoadTokenFromConfig()
+    {
+        string json = File.ReadAllText("config.json");
+        var jObj = JObject.Parse(json);
+        return jObj["Token"]?.ToString() ?? "";
     }
 
     private static Task LogAsync(LogMessage log)
