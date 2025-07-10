@@ -14,8 +14,14 @@ class Program
 
     static async Task Main(string[] args)
     {
-        var configData = JObject.Parse(File.ReadAllText("config.json"));
-        string token = configData["Token"]?.ToString();
+        // Fetching token from environment variable
+        string token = Environment.GetEnvironmentVariable("MTM0MjE2ODgzMDAyNTEzODI5Ng.GRZ-3b._mINGzI7xFBKiEvEmK_ix8fN5vuVTy8WlDssi8");
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("❌ Error: Token not found in environment variables!");
+            return;
+        }
 
         _client = new DiscordSocketClient(new DiscordSocketConfig
         {
