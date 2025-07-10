@@ -2,10 +2,8 @@
 using Discord.WebSocket;
 using Discord.Net;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using System.Globalization;
 
 class Program
@@ -17,12 +15,12 @@ class Program
 
     static async Task Main(string[] args)
     {
-        // ✅ Read token from config.json
-        string token = LoadTokenFromConfig();
+        // ✅ Read token from environment variable
+        string token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
 
         if (string.IsNullOrEmpty(token))
         {
-            Console.WriteLine("❌ Error: Token not found in config.json!");
+            Console.WriteLine("❌ Error: DISCORD_TOKEN not found in environment variables!");
             return;
         }
 
@@ -34,13 +32,6 @@ class Program
         await _client.StartAsync();
 
         await Task.Delay(-1);
-    }
-
-    private static string LoadTokenFromConfig()
-    {
-        string json = File.ReadAllText("config.json");
-        var jObj = JObject.Parse(json);
-        return jObj["Token"]?.ToString() ?? "";
     }
 
     private static Task LogAsync(LogMessage log)
