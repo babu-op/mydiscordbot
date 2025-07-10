@@ -10,23 +10,21 @@ using System.Globalization;
 
 class Program
 {
-    private static DiscordSocketClient _client;
+    private static DiscordSocketClient _client = new DiscordSocketClient(new DiscordSocketConfig
+    {
+        GatewayIntents = GatewayIntents.All
+    });
 
     static async Task Main(string[] args)
     {
-        // Fetching token from environment variable
-        string token = Environment.GetEnvironmentVariable("MTM0MjE2ODgzMDAyNTEzODI5Ng.G8hMKB.gfWMjuWZ8WpgIw6IKoSbNq4m4x8oPhsFHbUtno");
+        // ✅ Correct way to get token from environment variable
+        string token = Environment.GetEnvironmentVariable("TOKEN")!;
 
         if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("❌ Error: Token not found in environment variables!");
             return;
         }
-
-        _client = new DiscordSocketClient(new DiscordSocketConfig
-        {
-            GatewayIntents = GatewayIntents.All
-        });
 
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
