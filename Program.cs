@@ -15,7 +15,7 @@ class Program
 
     static async Task Main(string[] args)
     {
-        // ✅ Read token from environment variable
+        // Read bot token from environment variable
         string token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
 
         if (string.IsNullOrEmpty(token))
@@ -46,9 +46,9 @@ class Program
 
         var command = new SlashCommandBuilder()
             .WithName("message")
-            .WithDescription("Send a customized embed message")
+            .WithDescription("Send a customized embed message (only visible to you)")
             .AddOption("title", ApplicationCommandOptionType.String, "The title of the embed", isRequired: true)
-            .AddOption("description", ApplicationCommandOptionType.String, "The main content of the message", isRequired: true)
+            .AddOption("description", ApplicationCommandOptionType.String, "The main content", isRequired: true)
             .AddOption("color", ApplicationCommandOptionType.String, "Hex color code (e.g., #FF0000)", isRequired: false)
             .AddOption("image", ApplicationCommandOptionType.String, "Image URL", isRequired: false)
             .AddOption("thumbnail", ApplicationCommandOptionType.String, "Thumbnail URL", isRequired: false);
@@ -74,7 +74,6 @@ class Program
             string image = command.Data.Options.FirstOrDefault(x => x.Name == "image")?.Value?.ToString();
             string thumbnail = command.Data.Options.FirstOrDefault(x => x.Name == "thumbnail")?.Value?.ToString();
 
-            // Build the embed
             var embed = new EmbedBuilder()
                 .WithTitle(title)
                 .WithDescription(description)
@@ -86,7 +85,7 @@ class Program
             if (!string.IsNullOrWhiteSpace(thumbnail))
                 embed.WithThumbnailUrl(thumbnail);
 
-            // 👤 Respond only to the user (ephemeral)
+            // ✅ Respond only to the user
             await command.DeferAsync(ephemeral: true);
             await command.FollowupAsync(embed: embed.Build(), ephemeral: true);
         }
