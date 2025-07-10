@@ -1,21 +1,26 @@
-# Use official .NET SDK image
+# --- Step 1: Build Stage ---
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 
-WORKDIR /app
+# Set working directory inside container
+WORKDIR /src
 
-# Copy csproj and restore
+# Copy .csproj and restore dependencies
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy rest of the source code
+# Copy the rest of the source code
 COPY . ./
-RUN dotnet publish -c Release -o out
+RUN dotnet publish -c Release -o /app/publish
 
-# Runtime image
+
+# --- Step 2: Runtime Stage ---
 FROM mcr.microsoft.com/dotnet/runtime:7.0
 
+# Set working directory
 WORKDIR /app
-COPY --from=build /app/out .
 
-# Your executable name may vary
+# Copy published files from build stage
+COPY --from=build /app/publish .
+
+# Run the application
 ENTRYPOINT ["dotnet", "ConsoleApp2.dll"]
