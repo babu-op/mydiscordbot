@@ -15,7 +15,7 @@ class Program
     static async Task Main(string[] args)
     {
         // Fetching token from environment variable
-        string token = Environment.GetEnvironmentVariable("MTM0MjE2ODgzMDAyNTEzODI5Ng.GRZ-3b._mINGzI7xFBKiEvEmK_ix8fN5vuVTy8WlDssi8");
+        string token = Environment.GetEnvironmentVariable("MTM0MjE2ODgzMDAyNTEzODI5Ng.G8hMKB.gfWMjuWZ8WpgIw6IKoSbNq4m4x8oPhsFHbUtno");
 
         if (string.IsNullOrEmpty(token))
         {
