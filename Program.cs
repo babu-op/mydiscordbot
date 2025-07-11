@@ -74,18 +74,22 @@ class Program
             var image = command.Data.Options.FirstOrDefault(x => x.Name == "image")?.Value?.ToString();
             var thumbnail = command.Data.Options.FirstOrDefault(x => x.Name == "thumbnail")?.Value?.ToString();
 
+            // Create the embed message
             var embed = new EmbedBuilder()
                 .WithTitle(title)
                 .WithDescription(description)
                 .WithColor(new Color(uint.Parse(colorHex.Replace("#", ""), NumberStyles.HexNumber)));
 
+            // Check if image URL is provided, and add it if valid
             if (!string.IsNullOrWhiteSpace(image))
                 embed.WithImageUrl(image);
 
+            // Check if thumbnail URL is provided, and add it if valid
             if (!string.IsNullOrWhiteSpace(thumbnail))
                 embed.WithThumbnailUrl(thumbnail);
 
-            await command.RespondAsync(embed: embed.Build());
+            // Send the response as an ephemeral message (only visible to the user who invoked the command)
+            await command.RespondAsync(embed: embed.Build(), ephemeral: true);
         }
     }
 }
