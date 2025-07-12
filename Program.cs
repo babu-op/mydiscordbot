@@ -2,36 +2,43 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Net;
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Globalization;
+using Newtonsoft.Json;
 
 class Program
 {
-    private static DiscordSocketClient _client = new DiscordSocketClient(new DiscordSocketConfig
+    private static DiscordSocketClient _client;
+
+    class Config
     {
-        GatewayIntents = GatewayIntents.All
-    });
+        public string Token { get; set; }
+    }
 
     static async Task Main(string[] args)
     {
-        // ✅ Read token from environment variable
-        string token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
-
-        if (string.IsNullOrEmpty(token))
+        var config = LoadConfig();
+        _client = new DiscordSocketClient(new DiscordSocketConfig
         {
-            Console.WriteLine("❌ Error: DISCORD_TOKEN not found in environment variables!");
-            return;
-        }
+            GatewayIntents = GatewayIntents.All
+        });
 
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
         _client.SlashCommandExecuted += SlashCommandHandler;
 
-        await _client.LoginAsync(TokenType.Bot, token);
+        await _client.LoginAsync(TokenType.Bot, config.Token);
         await _client.StartAsync();
 
         await Task.Delay(-1);
+    }
+
+    private static Config LoadConfig()
+    {
+        string json = File.ReadAllText("config.json");
+        return JsonConvert.DeserializeObject<Config>(json);
     }
 
     private static Task LogAsync(LogMessage log)
@@ -48,48 +55,40 @@ class Program
             .WithName("message")
             .WithDescription("Send a customized embed message")
             .AddOption("title", ApplicationCommandOptionType.String, "The title of the embed", isRequired: true)
-            .AddOption("description", ApplicationCommandOptionType.String, "The main content of the message", isRequired: true)
-            .AddOption("color", ApplicationCommandOptionType.String, "Hex color code (e.g., #FF0000)", isRequired: false)
+            .AddOption("description", ApplicationCommandOptionType.String, "The main content", isRequired: true)
+            .AddOption("color", ApplicationCommandOptionType.String, "Hex color like #FF0000", isRequired: false)
             .AddOption("image", ApplicationCommandOptionType.String, "Image URL", isRequired: false)
             .AddOption("thumbnail", ApplicationCommandOptionType.String, "Thumbnail URL", isRequired: false);
 
         try
         {
             await _client.CreateGlobalApplicationCommandAsync(command.Build());
-            Console.WriteLine("🌍 Slash command registered.");
+            Console.WriteLine("🌐 Slash command registered.");
         }
         catch (HttpException ex)
         {
-            Console.WriteLine($"❌ Command registration failed: {ex}");
+            Console.WriteLine($"❌ Command error: {ex.Message}");
         }
     }
 
     private static async Task SlashCommandHandler(SocketSlashCommand command)
     {
-        if (command.Data.Name == "message")
-        {
-            var title = command.Data.Options.FirstOrDefault(x => x.Name == "title")?.Value?.ToString();
-            var description = command.Data.Options.FirstOrDefault(x => x.Name == "description")?.Value?.ToString();
-            var colorHex = command.Data.Options.FirstOrDefault(x => x.Name == "color")?.Value?.ToString() ?? "#0099ff";
-            var image = command.Data.Options.FirstOrDefault(x => x.Name == "image")?.Value?.ToString();
-            var thumbnail = command.Data.Options.FirstOrDefault(x => x.Name == "thumbnail")?.Value?.ToString();
+        if (command.Data.Name != "message") return;
 
-            // Create the embed message
-            var embed = new EmbedBuilder()
-                .WithTitle(title)
-                .WithDescription(description)
-                .WithColor(new Color(uint.Parse(colorHex.Replace("#", ""), NumberStyles.HexNumber)));
+        var title = command.Data.Options.FirstOrDefault(x => x.Name == "title")?.Value?.ToString();
+        var description = command.Data.Options.FirstOrDefault(x => x.Name == "description")?.Value?.ToString();
+        var colorHex = command.Data.Options.FirstOrDefault(x => x.Name == "color")?.Value?.ToString() ?? "#0099ff";
+        var image = command.Data.Options.FirstOrDefault(x => x.Name == "image")?.Value?.ToString();
+        var thumbnail = command.Data.Options.FirstOrDefault(x => x.Name == "thumbnail")?.Value?.ToString();
 
-            // Check if image URL is provided, and add it if valid
-            if (!string.IsNullOrWhiteSpace(image))
-                embed.WithImageUrl(image);
+        var embed = new EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription(description)
+            .WithColor(new Color(uint.Parse(colorHex.Replace("#", ""), NumberStyles.HexNumber)));
 
-            // Check if thumbnail URL is provided, and add it if valid
-            if (!string.IsNullOrWhiteSpace(thumbnail))
-                embed.WithThumbnailUrl(thumbnail);
+        if (!string.IsNullOrWhiteSpace(image)) embed.WithImageUrl(image);
+        if (!string.IsNullOrWhiteSpace(thumbnail)) embed.WithThumbnailUrl(thumbnail);
 
-            // Send the response as an ephemeral message (only visible to the user who invoked the command)
-            await command.RespondAsync(embed: embed.Build(), ephemeral: true);
-        }
+        await command.RespondAsync(embed: embed.Build(), ephemeral: true); // optional: hidden from others
     }
 }
